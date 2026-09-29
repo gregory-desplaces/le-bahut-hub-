@@ -1,0 +1,6 @@
+[
+  { "key": "digiforma", "label": "Émargement Digiforma", "url": "https://digiforma.net", "primary": true },
+  { "key": "discord", "label": "Discord de l'école", "url": "", "primary": false },
+  { "key": "notion", "label": "Notion (mes notes)", "url": "", "primary": false },
+  { "key": "drive", "label": "Google Drive", "url": "", "primary": false }
+]

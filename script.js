@@ -1,8 +1,3 @@
-const LS_LIENS = 'bahut_liens_v1';
-const LS_QUICKLINKS = 'bahut_quicklinks_v1';
-const LS_SUPPORT = 'bahut_support_v1';
-const SEED_URL = 'data/liens.json';
-
 const DEFAULT_QUICKLINKS = [
   { key: 'digiforma', label: 'Émargement Digiforma', url: 'https://digiforma.net', primary: true },
   { key: 'discord', label: 'Discord de l’école', url: '', primary: false },
@@ -31,38 +26,41 @@ function renderToday() {
   });
 }
 
-async function loadLiens() {
-  const stored = localStorage.getItem(LS_LIENS);
-  if (stored) {
-    liens = JSON.parse(stored);
-    return;
-  }
+async function apiSave(file, data) {
+  const res = await fetch('/api/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file, data }),
+  });
+  return res.json();
+}
+
+async function fetchJson(url, fallback) {
   try {
-    const res = await fetch(SEED_URL);
-    liens = await res.json();
+    const res = await fetch(url + '?t=' + Date.now());
+    if (!res.ok) return fallback;
+    return await res.json();
   } catch (e) {
-    liens = [];
+    return fallback;
   }
-  saveLiens();
 }
 
-function saveLiens() {
-  localStorage.setItem(LS_LIENS, JSON.stringify(liens));
+async function loadLiens() {
+  liens = await fetchJson('data/liens.json', []);
 }
 
-function loadQuicklinks() {
-  const stored = localStorage.getItem(LS_QUICKLINKS);
-  const overrides = stored ? JSON.parse(stored) : {};
-  quicklinks = DEFAULT_QUICKLINKS.map(d => ({ ...d, url: overrides[d.key] ?? d.url }));
+async function saveLiens() {
+  await apiSave('liens', liens);
 }
 
-function saveQuicklinkOverride(key, url) {
-  const stored = localStorage.getItem(LS_QUICKLINKS);
-  const overrides = stored ? JSON.parse(stored) : {};
-  overrides[key] = url;
-  localStorage.setItem(LS_QUICKLINKS, JSON.stringify(overrides));
-  loadQuicklinks();
+async function loadQuicklinks() {
+  quicklinks = await fetchJson('data/config.json', DEFAULT_QUICKLINKS);
+}
+
+async function saveQuicklinkUrl(key, url) {
+  quicklinks = quicklinks.map(q => q.key === key ? { ...q, url } : q);
   renderQuicklinks();
+  await apiSave('config', quicklinks);
 }
 
 function renderQuicklinks() {
@@ -89,7 +87,7 @@ function renderQuicklinks() {
       e.preventDefault();
       e.stopPropagation();
       const next = prompt('Lien pour "' + ql.label + '" :', ql.url || 'https://');
-      if (next !== null) saveQuicklinkOverride(ql.key, next.trim());
+      if (next !== null) saveQuicklinkUrl(ql.key, next.trim());
     });
     a.appendChild(editBtn);
 
@@ -165,11 +163,11 @@ function renderGrid() {
     del.className = 'lien-delete';
     del.textContent = '✕';
     del.title = 'Supprimer';
-    del.addEventListener('click', () => {
+    del.addEventListener('click', async () => {
       if (confirm('Supprimer "' + l.titre + '" ?')) {
         liens = liens.filter(x => x.id !== l.id);
-        saveLiens();
         renderGrid();
+        await saveLiens();
       }
     });
     actions.appendChild(del);
@@ -187,7 +185,7 @@ function setupAddForm() {
   toggleBtn.addEventListener('click', () => form.classList.toggle('hidden'));
   cancelBtn.addEventListener('click', () => form.classList.add('hidden'));
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const titre = document.getElementById('f-titre').value.trim();
     const url = document.getElementById('f-url').value.trim();
@@ -196,10 +194,10 @@ function setupAddForm() {
     if (!titre || !url) return;
 
     liens.unshift({ id: 'l-' + Date.now(), titre, url, source, note });
-    saveLiens();
     form.reset();
     form.classList.add('hidden');
     renderGrid();
+    await saveLiens();
   });
 }
 
@@ -207,13 +205,12 @@ function setupSearch() {
   document.getElementById('search').addEventListener('input', renderGrid);
 }
 
-function setupSupportDuJour() {
+async function setupSupportDuJour() {
   const input = document.getElementById('support-input');
   const openLink = document.getElementById('support-open');
   const saveBtn = document.getElementById('support-save');
 
-  const stored = localStorage.getItem(LS_SUPPORT);
-  const data = stored ? JSON.parse(stored) : null;
+  const data = await fetchJson('data/support.json', { date: '', url: '' });
 
   if (data && data.date === todayKey()) {
     input.value = data.url;
@@ -222,24 +219,63 @@ function setupSupportDuJour() {
     openLink.href = '#';
   }
 
-  saveBtn.addEventListener('click', () => {
+  saveBtn.addEventListener('click', async () => {
     const url = input.value.trim();
     if (!url) return;
-    localStorage.setItem(LS_SUPPORT, JSON.stringify({ date: todayKey(), url }));
     openLink.href = url;
+    await apiSave('support', { date: todayKey(), url });
+  });
+}
+
+function setStatus(message, isError) {
+  const el = document.getElementById('sync-status');
+  el.textContent = message;
+  el.style.color = isError ? '#c0392b' : '';
+  clearTimeout(setStatus._t);
+  setStatus._t = setTimeout(() => { el.textContent = ''; }, 5000);
+}
+
+function setupSync() {
+  document.getElementById('sync-pull').addEventListener('click', async () => {
+    setStatus('Récupération…', false);
+    try {
+      const res = await fetch('/api/git-pull', { method: 'POST' });
+      const json = await res.json();
+      setStatus(json.message, !json.ok);
+      if (json.ok) {
+        await loadQuicklinks();
+        renderQuicklinks();
+        await loadLiens();
+        renderGrid();
+      }
+    } catch (e) {
+      setStatus('Le serveur local n’est pas joignable.', true);
+    }
+  });
+
+  document.getElementById('sync-push').addEventListener('click', async () => {
+    setStatus('Publication…', false);
+    try {
+      const res = await fetch('/api/git-push', { method: 'POST' });
+      const json = await res.json();
+      setStatus(json.message, !json.ok);
+    } catch (e) {
+      setStatus('Le serveur local n’est pas joignable.', true);
+    }
   });
 }
 
 async function init() {
   renderToday();
-  loadQuicklinks();
+  await loadQuicklinks();
   renderQuicklinks();
   await loadLiens();
   renderFilters();
   renderGrid();
   setupAddForm();
   setupSearch();
-  setupSupportDuJour();
+  await setupSupportDuJour();
+  setupSync();
 }
 
 init();
