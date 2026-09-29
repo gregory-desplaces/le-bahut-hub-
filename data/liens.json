@@ -1,0 +1,23 @@
+[
+  {
+    "id": "seed-1",
+    "titre": "Exemple — Cours IA générative (Gamma)",
+    "url": "https://gamma.app/",
+    "source": "Gamma",
+    "note": "Exemple à remplacer ou supprimer"
+  },
+  {
+    "id": "seed-2",
+    "titre": "Exemple — Appli du cours (Lovable)",
+    "url": "https://lovable.dev/",
+    "source": "Lovable",
+    "note": "Exemple à remplacer ou supprimer"
+  },
+  {
+    "id": "seed-3",
+    "titre": "Exemple — Dossier de cours (Arc)",
+    "url": "https://arc.net/",
+    "source": "Arc",
+    "note": "Exemple à remplacer ou supprimer"
+  }
+]
