@@ -1,5 +1,5 @@
 [
-  { "key": "digiforma", "label": "Émargement Digiforma", "url": "https://digiforma.net", "primary": true },
+  { "key": "digiforma", "label": "Émargement Digiforma", "url": "https://6003991920.digiforma.net/ts/2707951/attendances", "primary": true },
   { "key": "discord", "label": "Discord de l'école", "url": "https://discord.com/channels/1506659778414514478/1506659778414514484", "primary": false },
   { "key": "notion", "label": "Notion (mes notes)", "url": "", "primary": false },
   { "key": "drive", "label": "Google Drive", "url": "", "primary": false }
