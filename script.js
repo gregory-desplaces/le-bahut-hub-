@@ -7,6 +7,8 @@ const DEFAULT_QUICKLINKS = [
 
 const SOURCES = ['Gamma', 'Lovable', 'Arc', 'Drive', 'Notion', 'Autre'];
 
+const READ_ONLY = !['localhost', '127.0.0.1'].includes(location.hostname);
+
 let liens = [];
 let quicklinks = [];
 let activeFilter = 'Tous';
@@ -79,17 +81,19 @@ function renderQuicklinks() {
     span.textContent = ql.url ? ql.label : ql.label + ' (à renseigner)';
     a.appendChild(span);
 
-    const editBtn = document.createElement('button');
-    editBtn.className = 'ql-edit';
-    editBtn.textContent = '✎';
-    editBtn.title = 'Modifier le lien';
-    editBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const next = prompt('Lien pour "' + ql.label + '" :', ql.url || 'https://');
-      if (next !== null) saveQuicklinkUrl(ql.key, next.trim());
-    });
-    a.appendChild(editBtn);
+    if (!READ_ONLY) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'ql-edit';
+      editBtn.textContent = '✎';
+      editBtn.title = 'Modifier le lien';
+      editBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const next = prompt('Lien pour "' + ql.label + '" :', ql.url || 'https://');
+        if (next !== null) saveQuicklinkUrl(ql.key, next.trim());
+      });
+      a.appendChild(editBtn);
+    }
 
     container.appendChild(a);
   });
@@ -159,18 +163,20 @@ function renderGrid() {
     open.textContent = 'Ouvrir ↗';
     actions.appendChild(open);
 
-    const del = document.createElement('button');
-    del.className = 'lien-delete';
-    del.textContent = '✕';
-    del.title = 'Supprimer';
-    del.addEventListener('click', async () => {
-      if (confirm('Supprimer "' + l.titre + '" ?')) {
-        liens = liens.filter(x => x.id !== l.id);
-        renderGrid();
-        await saveLiens();
-      }
-    });
-    actions.appendChild(del);
+    if (!READ_ONLY) {
+      const del = document.createElement('button');
+      del.className = 'lien-delete';
+      del.textContent = '✕';
+      del.title = 'Supprimer';
+      del.addEventListener('click', async () => {
+        if (confirm('Supprimer "' + l.titre + '" ?')) {
+          liens = liens.filter(x => x.id !== l.id);
+          renderGrid();
+          await saveLiens();
+        }
+      });
+      actions.appendChild(del);
+    }
 
     card.appendChild(actions);
     grid.appendChild(card);
@@ -266,6 +272,7 @@ function setupSync() {
 }
 
 async function init() {
+  if (READ_ONLY) document.body.classList.add('read-only');
   renderToday();
   await loadQuicklinks();
   renderQuicklinks();

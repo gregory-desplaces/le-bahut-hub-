@@ -51,6 +51,26 @@ body {
   text-align: right;
 }
 
+.readonly-badge {
+  display: none;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gray);
+  background: #eee;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+body.read-only .local-only {
+  display: none !important;
+}
+
+body.read-only .readonly-badge {
+  display: inline-block;
+}
+
 .brand-main {
   font-weight: 700;
   font-size: 22px;

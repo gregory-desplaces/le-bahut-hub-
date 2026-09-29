@@ -16,11 +16,12 @@
     <span class="brand-main">Le Bahut</span>
     <span class="brand-accent">Hub</span>
   </div>
-  <div class="sync">
+  <div class="sync local-only">
     <span class="sync-status" id="sync-status"></span>
     <button id="sync-pull" class="btn btn-ghost" title="Récupérer les données publiées par l'autre poste">⇩ Récupérer</button>
     <button id="sync-push" class="btn btn-primary" title="Publier mes changements pour l'autre poste">⇧ Publier</button>
   </div>
+  <span class="readonly-badge">Lecture seule</span>
   <div class="today" id="today-label"></div>
 </header>
 
@@ -36,8 +37,8 @@
       <span class="hint">Le support de présentation reçu le soir sur Discord</span>
     </div>
     <div class="today-form">
-      <input type="url" id="support-input" placeholder="Colle ici le lien du support du jour…">
-      <button id="support-save" class="btn btn-primary">Enregistrer</button>
+      <input type="url" id="support-input" class="local-only" placeholder="Colle ici le lien du support du jour…">
+      <button id="support-save" class="btn btn-primary local-only">Enregistrer</button>
       <a href="#" id="support-open" class="btn btn-ghost" target="_blank" rel="noopener">Ouvrir ↗</a>
     </div>
   </section>
@@ -45,7 +46,7 @@
   <section class="card">
     <div class="card-head">
       <h2>Mes cours</h2>
-      <button id="add-toggle" class="btn btn-primary">+ Ajouter un lien</button>
+      <button id="add-toggle" class="btn btn-primary local-only">+ Ajouter un lien</button>
     </div>
 
     <form id="add-form" class="add-form hidden">
