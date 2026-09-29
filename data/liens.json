@@ -1,12 +1,5 @@
 [
   {
-    "id": "l-1790671489686",
-    "titre": "Test sync multi-postes",
-    "url": "https://example.com/test-sync",
-    "source": "Gamma",
-    "note": ""
-  },
-  {
     "id": "seed-1",
     "titre": "Exemple — Cours IA générative (Gamma)",
     "url": "https://gamma.app/",
